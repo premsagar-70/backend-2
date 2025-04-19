@@ -36,7 +36,7 @@ exports.verifyEmail = async (req, res) => {
 // 🔥 Login with Google
 exports.loginWithGoogle = async (req, res) => {
   const { idToken } = req.body;
-  const decodedToken = await auth.verifyIdToken(idToken);
+  const { admin } = require("../config/firebaseConfig");  // Use admin here
 
   const { email } = decodedToken;
 
