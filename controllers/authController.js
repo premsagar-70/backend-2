@@ -1,56 +1,74 @@
+// backend/controllers/authController.js
 const jwt = require("jsonwebtoken");
-const { getAuth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } = require("firebase/auth");
 const { db } = require("../config/firebaseConfig");
-const { doc, getDoc, setDoc, collection, query, where, getDocs } = require("firebase/firestore");
+const { getDoc, doc, query, collection, where, getDocs, setDoc } = require("firebase/firestore");
 
-const auth = getAuth();
-
-// 🔥 Email & Password Login
 exports.loginWithEmailPassword = async (req, res) => {
   const { email, password } = req.body;
+
   try {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    const user = userCredential.user;
+    const usersRef = collection(db, "users"); // Users stored in "users" collection
+    const q = query(usersRef, where("email", "==", email));
+    const snapshot = await getDocs(q);
 
-    const token = jwt.sign({ id: user.uid, role: "student" }, process.env.JWT_SECRET, { expiresIn: "3h" });
+    if (snapshot.empty) {
+      return res.status(400).json({ message: "❌ Invalid email or password" });
+    }
 
-    res.json({ token });
+    const user = snapshot.docs[0].data();
+
+    if (user.password !== password) {
+      return res.status(400).json({ message: "❌ Invalid email or password" });
+    }
+
+    if (user.role === "student" && user.approved === false) {
+      return res.status(403).json({ message: "Please contact Admin for account approval" });
+    }
+
+    const token = jwt.sign({ id: snapshot.docs[0].id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "3h" });
+
+    res.json({ token, user });
   } catch (error) {
-    console.error("Login error", error);
-    res.status(400).json({ message: "Invalid email or password" });
+    console.error("Login Error:", error);
+    res.status(500).json({ message: "Server Error" });
   }
 };
 
-// 🔥 Verify if Email exists
 exports.verifyEmail = async (req, res) => {
   const { email } = req.body;
-  const q = query(collection(db, "users"), where("email", "==", email));
-  const snapshot = await getDocs(q);
+  try {
+    const usersRef = collection(db, "users");
+    const q = query(usersRef, where("email", "==", email));
+    const snapshot = await getDocs(q);
 
-  if (snapshot.empty) {
-    return res.status(404).json({ message: "Email doesn't exist" });
+    if (snapshot.empty) {
+      return res.status(404).json({ message: "Email doesn't exist" });
+    }
+
+    res.json({ exists: true });
+  } catch (error) {
+    console.error("Verify Email Error:", error);
+    res.status(500).json({ message: "Server Error" });
   }
-  res.json({ exists: true });
 };
 
-// 🔥 Login with Google
 exports.loginWithGoogle = async (req, res) => {
-  const { idToken } = req.body;
-  const { admin } = require("../config/firebaseConfig");  // Use admin here
+  const { gmail } = req.body;
 
-  const { email } = decodedToken;
+  try {
+    const studentsRef = collection(db, "users");
+    const q = query(studentsRef, where("gmail", "==", gmail));
+    const snapshot = await getDocs(q);
 
-  // Check if Gmail already linked
-  const q = query(collection(db, "students"), where("gmail", "==", email));
-  const snapshot = await getDocs(q);
-
-  if (!snapshot.empty) {
-    const user = snapshot.docs[0].data();
-    const token = jwt.sign({ id: user.id, role: "student" }, process.env.JWT_SECRET, { expiresIn: "3h" });
-
-    return res.json({ token });
-  } else {
-    // Student needs to link official college email
-    res.status(401).json({ message: "Link your college email first" });
+    if (!snapshot.empty) {
+      const student = snapshot.docs[0].data();
+      const token = jwt.sign({ id: snapshot.docs[0].id, role: student.role }, process.env.JWT_SECRET, { expiresIn: "3h" });
+      return res.json({ token });
+    } else {
+      res.status(401).json({ message: "Link your college email first" });
+    }
+  } catch (error) {
+    console.error("Google Login Error:", error);
+    res.status(500).json({ message: "Server Error" });
   }
 };
