@@ -2,7 +2,7 @@ const { db } = require("../config/firebaseConfig");
 const { collection, addDoc, getDocs } = require("firebase/firestore");
 
 const addteacher = async (req, res) => {
-  const { name, email, empId, role } = req.body;
+  const { name, email, empId, password, role, subject, department } = req.body;  // Make sure to destructure subject and department
   
   // Generate official email based on empId if it's provided
   const officialEmail = empId ? `${empId}@sreerama.ac.in` : email;
@@ -15,6 +15,8 @@ const addteacher = async (req, res) => {
       role: "teacher",  // Assign the role as teacher
       password,
       empId,
+      subject,  // Add the subject field
+      department,  // Add the department field
       createdAt: new Date(),
     });
     res.status(201).json({ message: "Teacher added successfully!" });
