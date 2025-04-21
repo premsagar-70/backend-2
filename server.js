@@ -30,7 +30,7 @@ app.use(cors({
 
 // API Routes
 app.use("/api/auth", authRoutes);
-app.use("/api", studentRoutes);
+app.use("/api/students", studentRoutes);
 app.use("/api", teacherRoutes);
 app.use("/api/attendance", attendanceRoutes);
 app.use("/api/departments", departmentRoutes);
