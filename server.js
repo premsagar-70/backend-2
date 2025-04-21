@@ -2,8 +2,9 @@
 const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
+const { initializeApp } = require("firebase/app");
+const { getFirestore, collection, query, where, getDocs, addDoc } = require("firebase/firestore");
 const { db } = require("./config/firebaseConfig");  // Firebase DB
-const { collection, query, where, getDocs, addDoc } = require("firebase/firestore");
 
 // Import Routes
 const authRoutes = require("./routes/authRoutes");
@@ -39,13 +40,13 @@ app.use("/api/subjects", subjectRoutes);
 async function createDefaultAdmin() {
   try {
     const usersRef = collection(db, "users");
-    const q = query(usersRef, where("email", "==", "admin@sreerama.ac.in"));
+    const q = query(usersRef, where("officialEmail", "==", "admin@sreerama.ac.in"));
     const querySnapshot = await getDocs(q);
 
     if (querySnapshot.empty) {
       // Admin doesn't exist → Create it
       await addDoc(usersRef, {
-        email: "admin@sreerama.ac.in",
+        officialEmail: "admin@sreerama.ac.in",
         password:"admin#1234",
         name: "Administrator",
         role: "admin",

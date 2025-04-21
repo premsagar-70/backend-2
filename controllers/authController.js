@@ -1,14 +1,14 @@
-const jwt = require("jsonwebtoken");
 const { db } = require("../config/firebaseConfig");
-const { collection, query, where, getDocs, doc, getDoc, setDoc } = require("firebase/firestore");
+const { collection, query, where, getDocs } = require("firebase/firestore");
+const jwt = require("jsonwebtoken");
 
-// 🔥 Email & Password Login
+// ✅ Email & Password Login
 exports.loginWithEmailPassword = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    // ✅ Look into STUDENTS collection for email login
-    const q = query(collection(db, "students"), where("officialEmail", "==", email));
+    // ✅ Look into USERS collection for email login
+    const q = query(collection(db, "users"), where("officialEmail", "==", email));
     const snapshot = await getDocs(q);
 
     if (snapshot.empty) {
@@ -18,17 +18,29 @@ exports.loginWithEmailPassword = async (req, res) => {
     const userDoc = snapshot.docs[0];
     const user = userDoc.data();
 
+    // Check password
     if (user.password !== password) {
       return res.status(400).json({ message: "Invalid password" });
     }
 
+    // Check if user is approved by admin
     if (user.approved === false) {
       return res.status(403).json({ message: "Your account is pending Admin approval" });
     }
 
-    const token = jwt.sign({ id: userDoc.id, role: "student" }, process.env.JWT_SECRET, { expiresIn: "3h" });
+    // Determine the role (admin, teacher, or student)
+    let role = "student";
+    if (user.role === "admin") {
+      role = "admin";
+    } else if (user.role === "teacher") {
+      role = "teacher";
+    }
 
-    res.json({ token, user });
+    // Create a JWT token with the user role
+    const token = jwt.sign({ id: userDoc.id, role }, process.env.JWT_SECRET, { expiresIn: "3h" });
+
+    // Return the token and user info
+    res.json({ token, user, role }); // Including role in the response
 
   } catch (error) {
     console.error("Login error:", error);
@@ -36,10 +48,11 @@ exports.loginWithEmailPassword = async (req, res) => {
   }
 };
 
+// ✅ Verify Email (before password input)
 exports.verifyEmail = async (req, res) => {
   const { email } = req.body;
   try {
-    const q = query(collection(db, "students"), where("officialEmail", "==", email));
+    const q = query(collection(db, "users"), where("officialEmail", "==", email));
     const snapshot = await getDocs(q);
 
     if (snapshot.empty) {
@@ -53,30 +66,43 @@ exports.verifyEmail = async (req, res) => {
   }
 };
 
-// POST /api/auth/google-login
+// ✅ Google Login
 exports.loginWithGoogle = async (req, res) => {
   const { gmail, name } = req.body;
 
   try {
-    const q = query(collection(db, "students"), where("gmail", "==", gmail));
+    // Search for user by Gmail
+    const q = query(collection(db, "users"), where("gmail", "==", gmail));
     const snapshot = await getDocs(q);
 
     if (snapshot.empty) {
-      // ❌ Not linked yet
+      // ❌ Not linked yet, return needLink flag
       return res.status(200).json({ needLink: true });
     }
 
-    const student = snapshot.docs[0].data();
+    const user = snapshot.docs[0].data();
 
-    if (!student.approved) {
+    // Check if user is approved by admin
+    if (!user.approved) {
       return res.status(401).json({ message: "Your account is pending Admin approval." });
     }
 
-    const token = jwt.sign({ id: student.rollNumber, role: "student" }, process.env.JWT_SECRET, {
+    // Determine the role (admin, teacher, or student)
+    let role = "student";
+    if (user.role === "admin") {
+      role = "admin";
+    } else if (user.role === "teacher") {
+      role = "teacher";
+    }
+
+    // Create a JWT token with the user role
+    const token = jwt.sign({ id: user.rollNumber || user.employeeNumber, role }, process.env.JWT_SECRET, {
       expiresIn: "3h",
     });
 
-    res.json({ token });
+    // Return the token along with user role
+    res.json({ token, role }); // Including role in the response
+
   } catch (error) {
     console.error("Google login error:", error);
     res.status(500).json({ message: "Server error" });

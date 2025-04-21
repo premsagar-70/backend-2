@@ -1,8 +1,9 @@
-// backend/controllers/studentController.js
-const { db, admin } = require("../config/firebaseConfig");
-const { doc, setDoc, getDoc, collection, query, where, getDocs } = require("firebase/firestore");
+const { db } = require("../config/firebaseConfig");
+const { collection, addDoc, query, where, getDocs, doc, updateDoc, deleteDoc, setDoc } = require("firebase/firestore");
+const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 
+// ✅ Add Student (with role: student)
 exports.addStudent = async (req, res) => {
   try {
     const { name, rollNumber, email, year, semester, department, subjects } = req.body;
@@ -17,7 +18,8 @@ exports.addStudent = async (req, res) => {
       semester,
       department,
       subjects,
-      isApproved: false, // ❗ Added isApproved = false initially
+      role: "student", // ✅ Added role
+      isApproved: false,
       createdAt: new Date(),
     });
 
@@ -28,6 +30,7 @@ exports.addStudent = async (req, res) => {
   }
 };
 
+// ✅ Get Students pending for approval
 exports.getPendingStudents = async (req, res) => {
   try {
     const usersRef = collection(db, "users");
@@ -46,10 +49,11 @@ exports.getPendingStudents = async (req, res) => {
   }
 };
 
+// ✅ Approve Student
 exports.approveStudent = async (req, res) => {
   try {
     const studentId = req.params.studentId;
-    const studentDoc = doc(db, "students", studentId);
+    const studentDoc = doc(db, "users", studentId);
 
     await updateDoc(studentDoc, {
       isApproved: true
@@ -62,10 +66,11 @@ exports.approveStudent = async (req, res) => {
   }
 };
 
+// ✅ Reject Student
 exports.rejectStudent = async (req, res) => {
   try {
     const studentId = req.params.studentId;
-    const studentDoc = doc(db, "students", studentId);
+    const studentDoc = doc(db, "users", studentId);
 
     await deleteDoc(studentDoc);
 
@@ -76,6 +81,7 @@ exports.rejectStudent = async (req, res) => {
   }
 };
 
+// ✅ Link Official Mail (for Google Sign-in users linking official email)
 exports.linkOfficialMail = async (req, res) => {
   const { gmail, officialEmail, rollNumber, dob, password, name } = req.body;
 
@@ -84,15 +90,16 @@ exports.linkOfficialMail = async (req, res) => {
   }
 
   try {
-    const studentRef = doc(db, "students", gmail); // Document id is Gmail
-    await setDoc(usersRef, {
+    const studentRef = doc(db, "users", gmail); // Document id is Gmail
+    await setDoc(studentRef, {
       gmail,
       officialEmail,
       rollNumber,
       dob,
-      password,   // ⚠️ (Later we can hash password)
+      password, // (Later hash this if needed)
       name,
       approved: false,
+      role: "student", // ✅ Linked users are students
       createdAt: new Date()
     });
 
