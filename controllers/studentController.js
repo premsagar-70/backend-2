@@ -18,6 +18,7 @@ exports.addStudent = async (req, res) => {
       semester,
       department,
       subjects,
+      officialEmail,
       role: "student", // ✅ Added role
       isApproved: false,
       createdAt: new Date(),
