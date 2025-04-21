@@ -2,10 +2,8 @@
 const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
-const { initializeApp } = require("firebase/app");
-const { getFirestore, collection, query, where, getDocs, addDoc } = require("firebase/firestore");
 const { db } = require("./config/firebaseConfig");  // Firebase DB
-const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+const { collection, query, where, getDocs, addDoc } = require("firebase/firestore");
 
 // Import Routes
 const authRoutes = require("./routes/authRoutes");
@@ -14,11 +12,6 @@ const teacherRoutes = require("./routes/teacherRoutes");
 const attendanceRoutes = require("./routes/attendanceRoutes");
 const departmentRoutes = require("./routes/departmentRoutes");
 const subjectRoutes = require("./routes/subjectRoutes");
-
-// initialize firebase-admin
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
-});
 
 // Initialize Environment
 dotenv.config();
