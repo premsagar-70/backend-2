@@ -7,9 +7,9 @@ exports.addStudent = async (req, res) => {
   try {
     const { name, rollNumber, email, year, semester, department, subjects } = req.body;
 
-    const studentsRef = collection(db, "students");
+    const usersRef = collection(db, "users");
 
-    await addDoc(studentsRef, {
+    await addDoc(usersRef, {
       name,
       rollNumber,
       email,
@@ -30,8 +30,8 @@ exports.addStudent = async (req, res) => {
 
 exports.getPendingStudents = async (req, res) => {
   try {
-    const studentsRef = collection(db, "students");
-    const q = query(studentsRef, where("isApproved", "==", false));
+    const usersRef = collection(db, "users");
+    const q = query(usersRef, where("isApproved", "==", false));
     const snapshot = await getDocs(q);
 
     const students = snapshot.docs.map(doc => ({
@@ -85,7 +85,7 @@ exports.linkOfficialMail = async (req, res) => {
 
   try {
     const studentRef = doc(db, "students", gmail); // Document id is Gmail
-    await setDoc(studentRef, {
+    await setDoc(usersRef, {
       gmail,
       officialEmail,
       rollNumber,
