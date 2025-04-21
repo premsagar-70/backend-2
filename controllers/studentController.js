@@ -1,6 +1,7 @@
 // backend/controllers/studentController.js
 const { db, admin } = require("../config/firebaseConfig");
-const { collection, addDoc, getDocs, updateDoc, doc, deleteDoc, query, where } = require("firebase/firestore");
+const { doc, setDoc, getDoc, collection, query, where, getDocs } = require("firebase/firestore");
+const bcrypt = require("bcryptjs");
 
 exports.addStudent = async (req, res) => {
   try {
@@ -72,5 +73,32 @@ exports.rejectStudent = async (req, res) => {
   } catch (error) {
     console.error("Error rejecting student:", error);
     res.status(500).json({ error: "Failed to reject student" });
+  }
+};
+
+exports.linkOfficialMail = async (req, res) => {
+  const { gmail, officialEmail, rollNumber, dob, password, name } = req.body;
+
+  if (!gmail || !officialEmail || !rollNumber || !dob || !password || !name) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
+
+  try {
+    const studentRef = doc(db, "students", gmail); // Document id is Gmail
+    await setDoc(studentRef, {
+      gmail,
+      officialEmail,
+      rollNumber,
+      dob,
+      password,   // ⚠️ (Later we can hash password)
+      name,
+      approved: false,
+      createdAt: new Date()
+    });
+
+    res.status(200).json({ message: "Student linked successfully!" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Failed to link student!" });
   }
 };
