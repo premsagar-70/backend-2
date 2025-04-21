@@ -8,6 +8,8 @@ exports.addStudent = async (req, res) => {
   try {
     const { name, rollNumber, email, year, semester, department, subjects, officialEmail } = req.body;
 
+    console.log("Received student data:", { name, rollNumber, email, year, semester, department, subjects, officialEmail });
+
     const usersRef = collection(db, "users");
 
     await addDoc(usersRef, {
@@ -19,7 +21,7 @@ exports.addStudent = async (req, res) => {
       department,
       subjects,
       officialEmail,
-      role: "student", // ✅ Added role
+      role: "student",
       isApproved: false,
       createdAt: new Date(),
     });
@@ -30,6 +32,7 @@ exports.addStudent = async (req, res) => {
     res.status(500).json({ error: "Failed to add student" });
   }
 };
+
 
 // ✅ Get Students pending for approval
 exports.getPendingStudents = async (req, res) => {
