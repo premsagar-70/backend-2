@@ -6,7 +6,7 @@ const bcrypt = require("bcryptjs");
 // ✅ Add Student (with role: student)
 exports.addStudent = async (req, res) => {
   try {
-    const { name, rollNumber, email, year, semester, department, subjects } = req.body;
+    const { name, rollNumber, email, year, semester, department, subjects, officialEmail } = req.body;
 
     const usersRef = collection(db, "users");
 
