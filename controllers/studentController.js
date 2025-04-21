@@ -4,14 +4,29 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 
 // ✅ Add Student (with role: student)
+// ✅ Add Student (with role: student)
 exports.addStudent = async (req, res) => {
   try {
+    // Destructure necessary fields from the request body
     const { name, rollNumber, email, year, semester, department, subjects, officialEmail } = req.body;
 
+    // Log received data for debugging
     console.log("Received student data:", { name, rollNumber, email, year, semester, department, subjects, officialEmail });
 
+    // Validate required fields
+    if (!name || !rollNumber || !email || !year || !semester || !department || !officialEmail) {
+      return res.status(400).json({ error: "All fields are required" });
+    }
+
+    // Validate rollNumber (ensure it's not undefined or empty)
+    if (!rollNumber.trim()) {
+      return res.status(400).json({ error: "Roll number is required" });
+    }
+
+    // Create a reference to the "users" collection
     const usersRef = collection(db, "users");
 
+    // Add the student data to the Firestore collection
     await addDoc(usersRef, {
       name,
       rollNumber,
@@ -26,13 +41,13 @@ exports.addStudent = async (req, res) => {
       createdAt: new Date(),
     });
 
+    // Send success response
     res.status(201).json({ message: "Student added. Waiting for approval." });
   } catch (error) {
     console.error("Error adding student:", error);
     res.status(500).json({ error: "Failed to add student" });
   }
 };
-
 
 // ✅ Get Students pending for approval
 exports.getPendingStudents = async (req, res) => {
