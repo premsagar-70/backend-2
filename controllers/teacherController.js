@@ -2,12 +2,12 @@ const { db } = require("../config/firebaseConfig");
 const { collection, addDoc, getDocs } = require("firebase/firestore");
 
 const addteacher = async (req, res) => {
-  const { name, email, empID, department, subjects, password } = req.body; // <-- notice empID
+  const { name, officialEmail, empID, department, subjects, password } = req.body; // <-- notice empID
 
   try {
     await addDoc(collection(db, "users"), {
       name,
-      email,
+      officialEmail,
       role: "teacher",
       empID, // <-- save empID directly
       department,
