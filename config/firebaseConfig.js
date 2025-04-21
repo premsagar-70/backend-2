@@ -9,11 +9,17 @@ dotenv.config();
 // Build serviceAccount manually from environment variables
 const serviceAccount = {
   type: "service_account",
-  project_id: process.env.FIREBASE_PROJECT_ID,
-  private_key: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
-  client_email: process.env.FIREBASE_CLIENT_EMAIL,
+  project_id: "sret-attendance-system",
+  private_key_id: "d1a5161985fa416c870b4f21dee115563783d50d",
+  private_key: process.env.FIREBASE_PRIVATE_KEY,
+  client_email: "firebase-adminsdk-fbsvc@sret-attendance-system.iam.gserviceaccount.com",
+  client_id: "114318675435157281536",
+  auth_uri: "https://accounts.google.com/o/oauth2/auth",
   token_uri: "https://oauth2.googleapis.com/token",
+  auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
+  client_x509_cert_url: "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40sret-attendance-system.iam.gserviceaccount.com"
 };
+
 
 // Initialize firebase-admin
 admin.initializeApp({
