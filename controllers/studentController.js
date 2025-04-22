@@ -118,16 +118,16 @@ exports.linkOfficialMail = async (req, res) => {
 
 exports.addStudentAdmin = async (req, res) => {
   try {
-    let { name, rollNumber, email, year, semester, department, subjects, officialEmail } = req.body;
+    let { name, rollNumber, email, password, year, semester, department, subjects, officialEmail } = req.body;
 
-    console.log("Received student data (admin):", { name, rollNumber, email, year, semester, department, subjects, officialEmail });
+    console.log("Received student data (admin):", { name, rollNumber, email, password, year, semester, department, subjects, officialEmail });
 
     // 👑 Admin manually adding — if email is missing, use officialEmail
     if (!email && officialEmail) {
       email = officialEmail;
     }
 
-    if (!name || !rollNumber || !email || !year || !semester || !department || !officialEmail) {
+    if (!name || !rollNumber || !email || !password || !year || !semester || !department || !officialEmail) {
       return res.status(400).json({ error: "All fields are required" });
     }
 
@@ -138,6 +138,7 @@ exports.addStudentAdmin = async (req, res) => {
       rollNumber,
       email,
       year,
+      password,
       semester,
       department,
       subjects,
