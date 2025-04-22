@@ -29,6 +29,12 @@ app.use(cors({
 }));
 app.options('*', cors()); // <<<--- ADD THIS LINE
 
+app.use((req, res, next) => {
+  res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
+  res.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
+  next();
+});
+
 // API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/students", studentRoutes);
@@ -64,7 +70,7 @@ async function createDefaultAdmin() {
 }
 
 // Call createDefaultAdmin after server setup
-createDefaultAdmin();
+// createDefaultAdmin();
 
 // Start Server
 const PORT = process.env.PORT || 5000;
