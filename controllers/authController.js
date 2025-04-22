@@ -76,7 +76,15 @@ exports.loginWithGoogle = async (req, res) => {
     const snapshot = await getDocs(q);
 
     if (snapshot.empty) {
-      // ❌ Not linked yet, return needLink flag
+      // ❌ No user found → Create document
+      await setDoc(doc(db, "users", gmail), {
+        gmail,
+        name,
+        role: "student",
+        approved: false,
+        createdAt: new Date(),
+      });
+
       return res.status(200).json({ needLink: true });
     }
 
@@ -88,20 +96,12 @@ exports.loginWithGoogle = async (req, res) => {
     }
 
     // Determine the role (admin, teacher, or student)
-    let role = "student";
-    if (user.role === "admin") {
-      role = "admin";
-    } else if (user.role === "teacher") {
-      role = "teacher";
-    }
+    const role = user.role || "student";
 
-    // Create a JWT token with the user role
-    const token = jwt.sign({ id: user.rollNumber || user.employeeNumber, role }, process.env.JWT_SECRET, {
-      expiresIn: "3h",
-    });
+    const payloadId = user.rollNumber || user.employeeNumber || user.gmail;
+    const token = jwt.sign({ id: payloadId, role }, process.env.JWT_SECRET, { expiresIn: "3h" });
 
-    // Return the token along with user role
-    res.json({ token, role }); // Including role in the response
+    res.json({ token, role });
 
   } catch (error) {
     console.error("Google login error:", error);
