@@ -144,7 +144,7 @@ exports.addStudentAdmin = async (req, res) => {
       subjects,
       officialEmail,
       role: "student",
-      isApproved: false,
+      isApproved: true,
       createdAt: new Date(),
     });
 
@@ -152,5 +152,45 @@ exports.addStudentAdmin = async (req, res) => {
   } catch (error) {
     console.error("Error adding student by admin:", error);
     res.status(500).json({ error: "Failed to add student by admin" });
+  }
+};
+
+exports.login = async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    // Check if the user exists in Firestore
+    const usersRef = collection(db, "users");
+    const q = query(usersRef, where("email", "==", email));
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const user = snapshot.docs[0].data();
+
+    // 🚨 Check approval status for students
+    if (user.role === "student" && !user.isApproved) {
+      return res.status(403).json({ message: "Account not approved yet by admin." });
+    }
+
+    // Verify password
+    const isMatch = await compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid password" });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { id: user.id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    res.json({ token });
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
