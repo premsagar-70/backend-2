@@ -1,5 +1,5 @@
 const { db } = require("../config/firebaseConfig");
-const { collection, query, where, getDocs } = require("firebase/firestore");
+const { collection, query, where, getDocs, setDoc, doc } = require("firebase/firestore");
 const jwt = require("jsonwebtoken");
 
 // ✅ Email & Password Login
