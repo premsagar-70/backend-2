@@ -71,12 +71,12 @@ exports.loginWithGoogle = async (req, res) => {
   const { gmail, name } = req.body;
 
   try {
-    // Search for user by Gmail
-    const q = query(collection(db, "users"), where("gmail", "==", gmail));
-    const snapshot = await getDocs(q);
+    const usersRef = collection(db, "users");
+    const q = query(usersRef, where("gmail", "==", gmail));
+    const querySnapshot = await getDocs(q);
 
-    if (snapshot.empty) {
-      // ❌ No user found → Create document
+    if (querySnapshot.empty) {
+      // If user does not exist → Create new user
       await setDoc(doc(db, "users", gmail), {
         gmail,
         name,
@@ -86,25 +86,24 @@ exports.loginWithGoogle = async (req, res) => {
       });
 
       return res.status(200).json({ needLink: true });
+    } else {
+      const userDoc = querySnapshot.docs[0];
+      const userData = userDoc.data();
+
+      if (userData.officialEmail) {
+        // Official email already linked
+        const role = userData.role || "student";
+        const payloadId = userData.rollNumber || userData.employeeNumber || userData.gmail;
+        const token = jwt.sign({ id: payloadId, role }, process.env.JWT_SECRET, { expiresIn: "3h" });
+
+        return res.status(200).json({ needLink: false, token });
+      } else {
+        // Official email not linked yet
+        return res.status(200).json({ needLink: true });
+      }
     }
-
-    const user = snapshot.docs[0].data();
-
-    // Check if user is approved by admin
-    if (!user.approved) {
-      return res.status(401).json({ message: "Your account is pending Admin approval." });
-    }
-
-    // Determine the role (admin, teacher, or student)
-    const role = user.role || "student";
-
-    const payloadId = user.rollNumber || user.employeeNumber || user.gmail;
-    const token = jwt.sign({ id: payloadId, role }, process.env.JWT_SECRET, { expiresIn: "3h" });
-
-    res.json({ token, role });
-
   } catch (error) {
     console.error("Google login error:", error);
-    res.status(500).json({ message: "Server error" });
+    return res.status(500).json({ message: "Server error" });
   }
 };
