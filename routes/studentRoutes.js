@@ -8,9 +8,6 @@ const router = express.Router();
 // Student adds themselves (needs to be logged in)
 router.post("/add", authMiddleware, addStudent);
 
-// ✅ Admin adds student manually (admin panel)
-router.post("/add-admin", authMiddleware, addStudentAdmin);
-
 // Link Gmail to official mail
 router.post("/link-official-mail", linkOfficialMail);
 
