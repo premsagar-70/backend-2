@@ -1,6 +1,6 @@
 // backend/routes/studentRoutes.js
 const express = require("express");
-const { addStudent, addStudentAdmin,getPendingStudents, approveStudent, rejectStudent, linkOfficialMail } = require("../controllers/studentController");
+const { addStudent, getPendingStudents, approveStudent, rejectStudent, linkOfficialMail } = require("../controllers/studentController");
 const { authMiddleware } = require("../middleware/authMiddleware");
 
 const router = express.Router();
