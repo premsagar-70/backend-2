@@ -1,6 +1,7 @@
 const { db } = require("../config/firebaseConfig");
 const { collection, query, where, getDocs, setDoc, doc } = require("firebase/firestore");
 const jwt = require("jsonwebtoken");
+const admin = require("firebase-admin");
 
 // ✅ Email & Password Login
 exports.loginWithEmailPassword = async (req, res) => {
@@ -105,5 +106,31 @@ exports.loginWithGoogle = async (req, res) => {
   } catch (error) {
     console.error("Google login error:", error);
     return res.status(500).json({ message: "Server error" });
+  }
+};
+
+// ✅ Get current user from Firebase token
+exports.getCurrentUser = async (req, res) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ message: "No token provided" });
+  }
+
+  const idToken = authHeader.split(" ")[1];
+
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    const uid = decodedToken.uid;
+
+    const userDoc = await admin.firestore().collection("users").doc(uid).get();
+    if (!userDoc.exists) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json(userDoc.data());
+  } catch (error) {
+    console.error("Error verifying token:", error);
+    res.status(401).json({ message: "Invalid token" });
   }
 };
