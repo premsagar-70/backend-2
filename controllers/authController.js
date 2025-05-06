@@ -117,20 +117,27 @@ exports.getCurrentUser = async (req, res) => {
     return res.status(401).json({ message: "No token provided" });
   }
 
-  const idToken = authHeader.split(" ")[1];
+  const token = authHeader.split(" ")[1];
 
   try {
-    const decodedToken = await admin.auth().verifyIdToken(idToken);
-    const uid = decodedToken.uid;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.id;
 
-    const userDoc = await admin.firestore().collection("users").doc(uid).get();
-    if (!userDoc.exists) {
+    // Get user data from Firestore
+    const userRef = doc(db, "users", userId);
+    const userSnap = await getDoc(userRef);
+
+    if (!userSnap.exists()) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    res.json(userDoc.data());
+    const userData = userSnap.data();
+    res.json({
+      email: userData.officialEmail || userData.gmail,
+      role: userData.role,
+    });
   } catch (error) {
-    console.error("Error verifying token:", error);
+    console.error("Error verifying custom JWT:", error);
     res.status(401).json({ message: "Invalid token" });
   }
 };
