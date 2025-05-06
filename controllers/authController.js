@@ -1,5 +1,5 @@
 const { db } = require("../config/firebaseConfig");
-const { collection, query, where, getDocs, setDoc, doc } = require("firebase/firestore");
+const { collection, query, where, getDocs, setDoc, doc, getDoc } = require("firebase/firestore");
 const jwt = require("jsonwebtoken");
 const admin = require("firebase-admin");
 
